@@ -8,6 +8,7 @@ STATUS_REASONS = {
     204: "No Content",
     400: "Bad Request",
     404: "Not Found",
+    415: "Unsupported Media Type",
     501: "Not Implemented"
 }
 
@@ -64,7 +65,7 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             if request_method == "GET":
                 self.handle_get(request_uri)
             elif request_method == "POST":
-                self.handle_post(request_uri, content_bytes)
+                self.handle_post(request_uri, content_bytes, header_params["Content-Type"])
             elif request_method == "PUT":
                 self.handle_put(request_uri, content_bytes, header_params)
             elif request_method == "DELETE":
@@ -108,7 +109,12 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             else:
                 send_http_response(self.wfile, self.HTTP_VERSION, 201)
 
-    def handle_post(self, request_uri, content_bytes):
+    def handle_post(self, request_uri, content_bytes, content_type):
+        # we are not allowed to POST anything that isn't text/plain according to the homework rubric
+        if content_type != "text/plain":
+            send_http_response(self.wfile, self.HTTP_VERSION, 415)
+            return
+
         request_path, file_exists = self.check_file_exists(request_uri, send_error=False)
 
         if file_exists:
