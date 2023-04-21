@@ -124,7 +124,14 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
         request_path, file_exists = self.check_file_exists(request_uri)
         if file_exists:
             with open(request_path, "rb") as f:
-                send_http_response(self.wfile, self.HTTP_VERSION, 200, content_bytes=f.read(), content_type="text/plain")
+                extension = request_path.suffix
+                if extension == ".txt":
+                    send_http_response(self.wfile, self.HTTP_VERSION, 200, content_bytes=f.read(), content_type="text/plain")
+                elif extension in [".png", ".gif", ".jpeg"]:
+                    send_http_response(self.wfile, self.HTTP_VERSION, 200, content_bytes=f.read(), content_type=f"image/{extension[1:]}")
+                else:
+                    # send file as generic binary content
+                    send_http_response(self.wfile, self.HTTP_VERSION, 200, content_bytes=f.read(), content_type=f"application/octet-stream")
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 3000
