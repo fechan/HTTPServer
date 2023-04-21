@@ -5,6 +5,7 @@ from pathlib import Path
 STATUS_REASONS = {
     200: "OK",
     201: "Created",
+    204: "No Content",
     400: "Bad Request",
     404: "Not Found",
     501: "Not Implemented"
@@ -83,7 +84,11 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
         return request_path, exists
 
     def handle_delete(self, request_uri):
-        pass
+        request_path, file_exists = self.check_file_exists(request_uri)
+
+        if file_exists:
+            request_path.unlink()
+            send_http_response(self.wfile, self.HTTP_VERSION, 204)
 
     def handle_put(self, request_uri, content_bytes, header_params):
         # we are required to handle Content-* headers we don't understand with 501 Not Implemented
