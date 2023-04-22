@@ -1,3 +1,9 @@
+""" HTTPServer that serves up local files. Written as homework for UW Networks & Distributed Computing class
+
+    WARNING: DO NOT USE THIS IN PRODUCTION! This will serve up arbitrary files on your hard drive regardless
+    of where they are located.
+"""
+
 import socketserver
 import sys
 from pathlib import Path
