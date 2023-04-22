@@ -20,7 +20,10 @@ STATUS_REASONS = {
 }
 
 def send_http_response(wfile, http_version, status_code, content_bytes=None, content_type=None):
-    """ Send an HTTP response given the response arguments and the TCP socket file handle
+    """ Send an HTTP response given the response arguments and the TCP socket file handle (wfile)
+
+        If content_bytes and content_type are specified, the necessary headers are automatically
+        included.
     """
 
     response = ""
@@ -43,6 +46,8 @@ def send_http_response(wfile, http_version, status_code, content_bytes=None, con
     wfile.write(response)
 
 def generate_error_body(status_code, reason):
+    """ Generate an HTML body for error responses with the HTTP cats """
+
     body = f"""<html>
   <body>
     <img src="https://http.cat/{status_code}">
@@ -97,6 +102,8 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             print(sys.exc_info()) # print exception info to console if error
 
     def check_file_exists(self, request_uri, send_error=True):
+        """ Check if the URI exists and send an error response if send_error is True """
+
         request_path = Path("." + request_uri)
         exists = True
 
