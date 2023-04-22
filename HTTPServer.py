@@ -85,6 +85,7 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             error_body = generate_error_body(400, reason)
             send_http_response(self.wfile, self.HTTP_VERSION, 400, content_bytes=error_body, content_type="text/html")
             print(sys.exc_info()) # print exception info to console if error
+            return
 
         try:
             if request_method == "GET":
@@ -100,6 +101,7 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             error_body = generate_error_body(500, reason)
             send_http_response(self.wfile, self.HTTP_VERSION, 500, content_bytes=error_body, content_type="text/html")
             print(sys.exc_info()) # print exception info to console if error
+            return
 
     def check_file_exists(self, request_uri, send_error=True):
         """ Check if the URI exists and send an error response if send_error is True """
