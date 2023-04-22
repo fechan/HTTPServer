@@ -1,5 +1,5 @@
 # HTTPServer
-Written for UW Networks & Distributed Computing class.
+Written for UW Networks & Distributed Computing class that serves up files on your hard drive.
 
 **WARNING: DO NOT USE IN PRODUCTION!** Clients can request arbitrary files from your hard drive regardless of where they are located.
 
