@@ -175,7 +175,7 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
                     send_http_response(self.wfile, self.HTTP_VERSION, 200, content_bytes=f.read(), content_type=f"application/octet-stream")
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 3001
+    HOST, PORT = "localhost", 80
 
     with socketserver.TCPServer((HOST, PORT), HTTPRequestHandler) as server:
         server.serve_forever()
