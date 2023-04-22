@@ -1,7 +1,7 @@
 # HTTPServer
 Written for UW Networks & Distributed Computing class.
 
-**WARNING: DO NOT USE IN PRODUCTION!** This will serve arbitrary files from your hard drive regardless of where they are located.
+**WARNING: DO NOT USE IN PRODUCTION!** Clients can request arbitrary files from your hard drive regardless of where they are located.
 
 # Requirements
 HTTPServer is intended for Python 3.10.9 on Arch Linux.
