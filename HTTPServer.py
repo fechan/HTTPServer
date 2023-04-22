@@ -35,6 +35,17 @@ def send_http_response(wfile, http_version, status_code, content_bytes=None, con
 
     wfile.write(response)
 
+def generate_error_body(status_code, reason):
+    body = f"""<html>
+  <body>
+    <img src="https://http.cat/{status_code}">
+    <p>{reason}</p>
+  </body>
+</html>
+    """
+
+    return bytes(body, encoding="us-ascii")
+
 class HTTPRequestHandler(socketserver.StreamRequestHandler):
     HTTP_VERSION = "HTTP/1.1"
     SUPPORTED_CONTENT_HEADERS = ["Content-Type", "Content-Length"]
@@ -50,7 +61,7 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             for header_line in self.rfile:
                 if header_line == b"\r\n": break
 
-                header_key, header_value = header_line.strip().decode("us-ascii").split(":", 1)
+                header_key, header_value = header_line.strip().decode("us-ascii").split(": ", 1)
                 header_params[header_key] = header_value
             
             # Begin content (if any)
@@ -58,7 +69,9 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
                 content_length = int(header_params["Content-Length"])
                 content_bytes = self.rfile.read(content_length)
         except Exception:
-            send_http_response(self.wfile, self.HTTP_VERSION, 400)
+            reason = f"You sent a bad request to the server!"
+            error_body = generate_error_body(400, reason)
+            send_http_response(self.wfile, self.HTTP_VERSION, 400, content_bytes=error_body, content_type="text/html")
             print(sys.exc_info()) # print exception info to console if error
 
         try:
@@ -71,7 +84,9 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             elif request_method == "DELETE":
                 self.handle_delete(request_uri)
         except Exception:
-            send_http_response(self.wfile, self.HTTP_VERSION, 500)
+            reason = f"Oh!! My God!! The server broke and there are no monkeys to fix it!"
+            error_body = generate_error_body(500, reason)
+            send_http_response(self.wfile, self.HTTP_VERSION, 500, content_bytes=error_body, content_type="text/html")
             print(sys.exc_info()) # print exception info to console if error
 
     def check_file_exists(self, request_uri, send_error=True):
@@ -79,7 +94,10 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
         exists = True
 
         if not (request_path.exists() and request_path.is_file()):
-            if send_error: send_http_response(self.wfile, self.HTTP_VERSION, 404)
+            if send_error:
+                reason = f"Oh!! My god!! The server couldn't find the requested resource!"
+                error_body = generate_error_body(404, reason)
+                send_http_response(self.wfile, self.HTTP_VERSION, 404, content_bytes=error_body, content_type="text/html")
             exists = False
 
         return request_path, exists
@@ -95,8 +113,9 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
         # we are required to handle Content-* headers we don't understand with 501 Not Implemented
         for param in header_params:
             if param.startswith("Content-") and param not in self.SUPPORTED_CONTENT_HEADERS:
-                error_explanation = bytes(f"`{param}` HTTP header is not supported by this server, and the HTTP/1.1 spec does not allow us to ignore it.", encoding="us-ascii")
-                send_http_response(self.wfile, self.HTTP_VERSION, 501, content_bytes=error_explanation, content_type="text/plain")
+                reason = f"`{param}` HTTP header is not supported by this server, and the HTTP/1.1 spec does not allow us to ignore it for PUT requests."
+                error_body = generate_error_body(501, reason)
+                send_http_response(self.wfile, self.HTTP_VERSION, 501, content_bytes=error_body, content_type="text/html")
                 return
 
         request_path, file_exists = self.check_file_exists(request_uri, send_error=False)
@@ -105,14 +124,16 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
             f.write(content_bytes)
 
             if file_exists:
-                send_http_response(self.wfile, self.HTTP_VERSION, 200)
+                send_http_response(self.wfile, self.HTTP_VERSION, 204)
             else:
                 send_http_response(self.wfile, self.HTTP_VERSION, 201)
 
     def handle_post(self, request_uri, content_bytes, content_type):
         # we are not allowed to POST anything that isn't text/plain according to the homework rubric
         if content_type != "text/plain":
-            send_http_response(self.wfile, self.HTTP_VERSION, 415)
+            reason = f"The server does not support POST for requests that aren't of type text/plain according to the homework rubric."
+            error_body = generate_error_body(415, reason)
+            send_http_response(self.wfile, self.HTTP_VERSION, 415, content_bytes=error_body, content_type="text/html")
             return
 
         request_path, file_exists = self.check_file_exists(request_uri, send_error=False)
@@ -120,7 +141,7 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
         if file_exists:
             with open(request_path, "ab") as f:
                 f.write(content_bytes)
-                send_http_response(self.wfile, self.HTTP_VERSION, 200)
+                send_http_response(self.wfile, self.HTTP_VERSION, 204)
         else:
             with open(request_path, "wb") as f:
                 f.write(content_bytes)
@@ -140,7 +161,7 @@ class HTTPRequestHandler(socketserver.StreamRequestHandler):
                     send_http_response(self.wfile, self.HTTP_VERSION, 200, content_bytes=f.read(), content_type=f"application/octet-stream")
 
 if __name__ == "__main__":
-    HOST, PORT = "localhost", 3000
+    HOST, PORT = "localhost", 3001
 
     with socketserver.TCPServer((HOST, PORT), HTTPRequestHandler) as server:
         server.serve_forever()
