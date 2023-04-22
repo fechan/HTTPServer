@@ -9,6 +9,7 @@ STATUS_REASONS = {
     400: "Bad Request",
     404: "Not Found",
     415: "Unsupported Media Type",
+    500: "Internal Server Error",
     501: "Not Implemented"
 }
 
